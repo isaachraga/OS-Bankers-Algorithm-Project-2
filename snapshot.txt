@@ -24,9 +24,4 @@ Allocation
 Available
 3 3 2
 
-Process
-0
-
-Request
-4 0 0
 END

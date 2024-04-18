@@ -10,7 +10,6 @@
 #include <fstream>
 #include <sstream>
 #include <stdlib.h>
-#include <algorithm>
 
 using namespace std;
 
@@ -19,7 +18,6 @@ class Banker{
         int numProc;      /* number of processes */ 
         int numResources; /* number of resources */ 
         int * available;  /* number of available instances of each resource */ 
-        int * request;    /* amount of resources requested by specified process */
         int ** max;       /* max amount of resources a process can request, eg. 
                              max[i][j] where i = process and j=amount */
         int ** allocation;/* amount of resources allocated to a process, eg. 
@@ -32,14 +30,14 @@ class Banker{
         
       
     public:
-        Banker(int * avail, int ** m, int ** alloc, int p, int r, int * req){
+        Banker(int * avail, int ** m, int ** alloc, int p, int r){
 
             numProc = p;
             numResources = r;
             available = avail;
             max = m;
             allocation = alloc;
-            request = req;
+         
 
             /* initialize need matrix */
             need = new int*[numProc];
@@ -60,27 +58,11 @@ class Banker{
             
         }
 
-        bool isSafe(int pid, string & sequenceOrReason){
+        bool isSafe(string & sequenceOrReason){
 
             int procsDone = 0;
             int carry;        /* carry over value between steps 2 and 3 */
 
-            /* check for valid request */
-            for(int i = 0; i< numResources; ++i){
-                if(((max[pid][i]) - (allocation[pid][i])) < request[i]){
-                    sequenceOrReason = "Invalid request (exceeded max allocation)";
-                    return false;
-                }
-            }
-
-            /* check that banker has enough resources */
-            for(int i = 0;i< numResources;++i){
-                if(available[i] < request[i]){
-                    sequenceOrReason = "Not enough resources for this request";
-                    return false;
-                }
-            }
-            
             /* build the need matrix */
             for(int i = 0; i< numProc; ++i){
                 for(int j = 0; j< numResources; ++j){
@@ -94,13 +76,6 @@ Step1:
             /* instantiate the work array */
             work = new int[numResources];
             copy(available, available + numResources, work);
-            
-            /* test that the request will work  */
-            for(int i=0; i<numResources; ++i){
-                work[i] = work[i] - request[i];
-                allocation[pid][i] = allocation[pid][i] + request[i];
-                need[pid][i] = need[pid][i] - request[i];
-            }
 
             /* instantiate the finished array */   
             finish = new bool[numProc];
@@ -190,7 +165,6 @@ int main (int argc, char * const argv[]){
     /* Declare available array, total array, max matrix, and allocation matrix */ 
     int * available ;
     int * total;
-    int * request;
     int ** max;
     int ** allocation;
     
@@ -216,7 +190,6 @@ int main (int argc, char * const argv[]){
             with the number of processes and the number of resources */ 
             available = new int[numResources];
             total = new int[numResources];
-            request = new int[numResources];
             max = new int*[numProc];
             allocation = new int*[numProc];
             for (int i = 0; i < numProc; ++i)
@@ -260,21 +233,8 @@ int main (int argc, char * const argv[]){
                 //cout << "Available: " << available[i] << "\n";
             }
             
-        } else if(line=="Process"){
-                config >> line;
-                pid = stoi(line);
+        } 
 
-        } else if(line=="Request"){
-             for (int i = 0; i < numResources; ++i)
-            {
-                    config >> line;
-                    request[i] = stoi(line);
-                    //cout << "Request: " << i << ": " << request[i]<< "\n";
-                
-            
-            }
-
-        }
         if(config.eof()){
             break;
         } 
@@ -282,16 +242,23 @@ int main (int argc, char * const argv[]){
     }
    
     /* Initialize banker with all arrays and matrices*/
-    Banker * banker = new Banker(available, max, allocation, numProc, numResources, request);
+    Banker * banker = new Banker(available, max, allocation, numProc, numResources);
+
+    ofstream myfile;
+     myfile.open ("output.txt");
+     myfile.clear();
+  
+  
 
     /* Check to see if request and system is safe using Banker's Algorithm*/
-    if (banker -> isSafe(pid, sequenceOrReason))
-        cout << "The system is in a safe state!\n"
+    if (banker -> isSafe(sequenceOrReason))
+        myfile << "The system is in a safe state!\n"
              << "The safe sequence is: " << sequenceOrReason << ".\n";
     else
-        cout << "The system is not in a safe state.\n"
+        myfile << "The system is not in a safe state.\n"
              << "Reason: " << sequenceOrReason << "\n";
 
+    myfile.close();
     /* Free all allocated memory space */
     delete banker;
     
@@ -301,7 +268,6 @@ int main (int argc, char * const argv[]){
     }
     delete[] available;
     delete[] total;
-    delete[] request;
     delete[] max;
     delete[] allocation;
     
