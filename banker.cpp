@@ -146,7 +146,6 @@ int main (int argc, char * const argv[]){
     int numProc;               /* number of processes*/
     int numResources;          /* number of resources */
     string sequenceOrReason;   /* Return string of the Banker's Algorithm */
-    int pid;                   /* ID of process making the request */
 
     /* Read in the snapshot file */
     if (argc < 2)
@@ -250,7 +249,7 @@ int main (int argc, char * const argv[]){
   
   
 
-    /* Check to see if request and system is safe using Banker's Algorithm*/
+    /* Check to see if system is safe using Banker's Algorithm*/
     if (banker -> isSafe(sequenceOrReason))
         myfile << "The system is in a safe state!\n"
              << "The safe sequence is: " << sequenceOrReason << ".\n";
